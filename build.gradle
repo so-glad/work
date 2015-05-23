@@ -1,0 +1,65 @@
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+version = '1.0.2'
+
+repositories {
+    maven {
+        url "http://gear.glad.so:81/nexus/content/groups/public/"
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+dependencies {
+    compile("org.apache.commons:commons-io:1.3.2")
+    compile("org.apache.commons:commons-lang3:3.3.2")
+    compile("org.slf4j:slf4j-api:1.7.12")
+    compile("com.google.guava:guava:18.0")
+    compile("org.springframework:spring-context:4.1.6.RELEASE")
+    testCompile("org.slf4j:slf4j-log4j12:1.7.12")
+    testCompile("log4j:log4j:1.2.17")
+    testCompile("org.jmockit:jmockit:1.16")
+    testCompile("junit:junit:4.11")
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'so.glad'
+            artifactId = 'soglad-work'
+
+            from components.java
+            artifacts {
+                archives javadocJar
+                archives sourcesJar
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            artifactUrls ["http://gear.glad.so:81/nexus/content/groups/public/"]
+            if(project.version.endsWith('-SNAPSHOT')) {
+                url "http://gear.glad.so:81/nexus/content/repositories/snapshots/"
+            } else {
+                url "http://gear.glad.so:81/nexus/content/repositories/releases/"
+            }
+            credentials {
+                username "${PUBLISH_USERNAME}"
+                password "${PUBLISH_PASSWORD}"
+            }
+        }
+    }
+}
